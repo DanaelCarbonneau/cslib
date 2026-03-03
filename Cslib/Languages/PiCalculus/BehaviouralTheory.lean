@@ -211,7 +211,6 @@ theorem bisimilarity_par_comm  [HasFresh Name] :
         constructor
         · exact Tr.clsR htr₂ htr₁
         · apply ParComm.parCommRes
-          have h := bisimilarity_par_comm ( p := p'') (q := q'')
           sorry
       case clsR a b p'' q'' htr₁ htr₂ =>
         exists ((ν b) q'' ‖ p'')
