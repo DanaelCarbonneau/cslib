@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2025 Fabrizio Montesi. All rights reserved.
+Copyright (c) 2026 Danaël Carbonneau. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Fabrizio Montesi
+Authors: Danaël Carbonneau
 -/
 
 module
@@ -21,11 +21,10 @@ public import Cslib.Foundations.Syntax.HasSubstitution
 - `PiCal.Process`: processes.
 
 ## Main results
-(nil or a constant).
+
 
 ## References
 
-* [R. Milner, *A Calculus of Communicating Systems*][Milner80]
 * [D. Sangiorgi, *Introduction to Bisimulation and Coinduction*][Sangiorgi2011]
 -/
 
@@ -217,11 +216,9 @@ instance [DecidableEq Name] {μ μ' : Act Name} : Decidable (Co μ μ') :=
 
 end Act
 
-instance : ToString (Chan String) where
-  toString c :=
-  match c with
-  | .send a x => s!"{a}-⟨{x}⟩"
-  | .recv a x => s!"{a}({x})"
+
+namespace repr
+
 
 instance : ToString (Chan Nat) where
   toString c :=
@@ -229,61 +226,25 @@ instance : ToString (Chan Nat) where
   | .send a x => s!"{a}-⟨{x}⟩"
   | .recv a x => s!"{a}({x})"
 
+abbrev Processₙ := Process Nat Nat
 
-def Process.toString (p : Process String String) :=
+
+def Processₙ.toString (p : Processₙ) :=
 match p with
 | .nil => "0"
-| .pre μ p => s!"{μ}.{p.toString}"
-| .par p q => s!"{p.toString} | {q.toString}"
-| .choice p q => s!"{p.toString}+{q.toString}"
-| .res a p => s!"(ν {a}) {p.toString}}"
-| .const c => c
-| .bang a x p => s!"!{a}({x}). {p.toString}"
-
-
-def Process.toString' (p : Process Nat Nat) :=
-match p with
-| .nil => "0"
-| .pre μ p => s!"{μ}.{p.toString'}"
-| .par p q => s!"{p.toString'} | {q.toString'}"
-| .choice p q => s!"{p.toString'}+{q.toString'}"
-| .res a p => s!"(ν {a}) {p.toString'}}"
+| .pre μ p => s!"{μ}.{Processₙ.toString p}"
+| .par p q => s!"{Processₙ.toString p} | {Processₙ.toString q}"
+| .choice p q => s!"{Processₙ.toString p}+{Processₙ.toString q}"
+| .res a p => s!"(ν {a}) {Processₙ.toString p}}"
 | .const c => s!"{c}"
-| .bang a x p => s!"!{a}({x}). {p.toString'}"
-
-
-instance : ToString (Process String String) where
-toString := Process.toString
-
-instance : ToString (Process Nat Nat) where
-toString := Process.toString'
-open Process
+| .bang a x p => s!"!{a}({x}). {Processₙ.toString p}"
 
 
 
-def pEx (a b x y : Name) : Process Name Constant := -- a(x).x'⟨y⟩ | a'⟨b⟩.nil
-  par (pre (Chan.recv a x) (pre (Chan.send x y) nil )) (pre (Chan.send a b) nil)
-def pEx' (a b x y : Name) : Process Name Constant :=
-  (a(x)·x-⟨y⟩·∘ )‖(a-⟨b⟩·∘ )
+instance : ToString Processₙ where
+toString := Processₙ.toString
 
-example (a b x y : Name) : (pEx a b x y (Constant := Constant))= pEx' a b x y :=
-by
-  unfold pEx pEx'
-  rfl
+end repr
 
-#eval pEx "a" "b" "x" "y" (Constant := String)
-#eval (pre (Chan.recv 1 2) (pre (Chan.send 2 3) nil ) (Constant := ℕ)).subst  2 4
-
-
-#eval (pEx 1 2 3 4  (Constant := Nat))[4 :=5]
-
-variable {Name : Type u} [DecidableEq Name] {Constant : Type v}
-  {defs : Constant → PiCal.Process Name Constant → Prop}
-
-
-#eval (Chan.recv "a" "x").Bounds? "z"
---#eval (pre (Chan.send "x" "y") nil  (Constant := String)).subst "y" "z"
-#eval (Chan.send "x" "y").Bounds? "y"
-end Cslib.PiCal
-
-#check (· +1)
+end PiCal
+end Cslib
