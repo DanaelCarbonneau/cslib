@@ -16,8 +16,14 @@ namespace Cslib
 class HasAlphaEquiv (β : Type u) where
   /-- α-equivalence relation for type β. -/
   AlphaEquiv : β → β → Prop
+  instEquiv : Equivalence AlphaEquiv
 
 @[inherit_doc]
 notation m:max " =α " n:max => HasAlphaEquiv.AlphaEquiv m n
+
+instance [HasAlphaEquiv β] : Trans (HasAlphaEquiv.AlphaEquiv (β := β))
+  HasAlphaEquiv.AlphaEquiv  HasAlphaEquiv.AlphaEquiv  where
+trans := HasAlphaEquiv.instEquiv.trans
+
 
 end Cslib

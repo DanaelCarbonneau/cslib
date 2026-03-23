@@ -159,6 +159,8 @@ inductive Term.AlphaEquiv [DecidableEq Var] : Term Var → Term Var → Prop whe
 /-- Instance for the notation `m =α n`. -/
 instance instHasAlphaEquivTerm [DecidableEq Var] : HasAlphaEquiv (Term Var) where
   AlphaEquiv := Term.AlphaEquiv
+  instEquiv := Equivalence.mk (r := Term.AlphaEquiv)
+    (fun _ => Term.AlphaEquiv.refl) (Term.AlphaEquiv.symm) (Term.AlphaEquiv.trans)
 
 end LambdaCalculus.Named
 
