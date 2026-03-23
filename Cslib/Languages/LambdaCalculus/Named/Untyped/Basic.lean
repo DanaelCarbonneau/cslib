@@ -149,12 +149,40 @@ def Context.fill (c : Context Var) (m : Term Var) : Term Var :=
   | appL c n => Term.app (c.fill m) n
   | appR n c => Term.app n (c.fill m)
 
-/-- Variables (both free and bound) in a context. -/
-def Context.vars : Context Var → Finset Var
-  | hole => ∅
-  | abs x c => c.vars ∪ {x}
-  | appL c m => c.vars ∪ m.vars
-  | appR m c => m.vars ∪ c.vars
+/-- Any `Term` can be obtained by filling a `Context` with a variable. This proves that `Context`
+completely captures the syntax of terms. -/
+theorem Context.complete (m : Term Var) :
+    ∃ (c : Context Var) (x : Var), m = (c.fill (Term.var x)) := by
+  induction m with
+  | var x => exists hole, x
+  | abs x n ih =>
+    obtain ⟨c', y, ih⟩ := ih
+    exists Context.abs x c', y
+    rw [ih, fill]
+  | app n₁ n₂ ih₁ ih₂ =>
+    obtain ⟨c₁, x₁, ih₁⟩ := ih₁
+    exists Context.appL c₁ n₂, x₁
+    rw [ih₁, fill]
+
+open Term
+
+/-- α-equivalence. -/
+inductive Term.AlphaEquiv [DecidableEq Var] : Term Var → Term Var → Prop where
+-- The α-axiom
+| ax {m : Term Var} {x y : Var} :
+  y ∉ m.fv → AlphaEquiv (abs x m) (abs y (m.rename x y))
+-- Equivalence relation rules
+| refl : AlphaEquiv m m
+| symm : AlphaEquiv m n → AlphaEquiv n m
+| trans : AlphaEquiv m1 m2 → AlphaEquiv m2 m3 → AlphaEquiv m1 m3
+-- Context closure
+| ctx {c : Context Var} {m n : Term Var} : AlphaEquiv m n → AlphaEquiv (c.fill m) (c.fill n)
+
+/-- Instance for the notation `m =α n`. -/
+instance instHasAlphaEquivTerm [DecidableEq Var] : HasAlphaEquiv (Term Var) where
+  AlphaEquiv := Term.AlphaEquiv
+  instEquiv := Equivalence.mk (r := Term.AlphaEquiv)
+    (fun _ => Term.AlphaEquiv.refl) (Term.AlphaEquiv.symm) (Term.AlphaEquiv.trans)
 
 end LambdaCalculus.Named.Untyped.Term
 
