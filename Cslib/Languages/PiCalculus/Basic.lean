@@ -454,8 +454,8 @@ Prop where
 instance instHasAlphaEquivProcess [DecidableEq Name] [HasFresh Name]
   : HasAlphaEquiv (Process Name) where
   AlphaEquiv := Process.AlphaEquiv
-  instEquiv := Equivalence.mk (fun _ => Process.AlphaEquiv.refl)
-    (fun h => Process.AlphaEquiv.symm h) (fun h₁ h₂ => Process.AlphaEquiv.trans h₁ h₂)
+  -- instEquiv := Equivalence.mk (fun _ => Process.AlphaEquiv.refl)
+  --   (fun h => Process.AlphaEquiv.symm h) (fun h₁ h₂ => Process.AlphaEquiv.trans h₁ h₂)
 
 /-- If p' = p.subst x y, then if q and p.subst x y are α-convertible, q and p' are α-convertible. -/
 theorem Process.alpha_subst_from_eq [DecidableEq Name] [HasFresh Name]

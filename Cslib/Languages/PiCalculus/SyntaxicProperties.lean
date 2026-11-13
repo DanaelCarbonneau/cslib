@@ -97,46 +97,58 @@ theorem Motive.subst_subset [DecidableEq Name] [HasFresh Name] (M : Motive Name)
     induction π
     case send a b =>
       simp only [Prefix.subst,Prefix.fn,Prefix.bn]
-      split
-      · split
-        · split
-          ·grind
-          ·grind
-        · grind
-      · split
-        · split
-          ·grind
-          ·grind
-        · grind
+      grind
     case recv a b =>
       simp only [Prefix.subst,Prefix.fn,Prefix.bn]
-      split
-      · split
-        · grind
-        · grind
-      · split
-        · grind
-        · grind
+      grind
     case τ =>
       simp only [Prefix.subst,Prefix.fn,Prefix.bn]
       grind
     case guard x' y' π hind =>
       simp only [Prefix.subst,Prefix.fn,Prefix.bn]
-
       split
-      · split
-        · split
-          · expose_names
-            simp only[h_2,↓reduceIte] at hind
-            rw[h_1,h]
-            have h : (π.fn ∪ p.fn) \ π.bn ∪ {v} ⊆  ({x, x} ∪ π.fn ∪ p.fn) \ π.bn ∪ {v} := by
-              grind
+      case isTrue ht =>
+        split
+        case isTrue ht₂ =>
+          rw [ht]
+          by_cases x ∈ π.bn
+          case pos Hpos =>
+            simp only [Hpos,↓reduceIte] at hind ⊢
+            simp only [Finset.mem_singleton, Finset.insert_eq_of_mem, Finset.singleton_union,
+              Finset.insert_union, Finset.union_singleton, sdiff_le_iff, Finset.union_insert,
+              ge_iff_le] at hind ⊢
+            grind only [= Finset.subset_iff, = Finset.insert_eq_of_mem, = Finset.mem_insert,
+              = Finset.mem_union, = Finset.mem_sdiff]
+          case neg Hneg =>
+            simp only [Hneg,↓ reduceIte] at hind ⊢
+            simp only [Finset.mem_singleton, Finset.insert_eq_of_mem, Finset.singleton_union,
+              Finset.insert_union, Finset.union_singleton, sdiff_le_iff, Finset.union_insert,
+              ge_iff_le] at hind ⊢
             grind
-          · expose_names
-            simp only[h_2,↓reduceIte] at hind
-            rw[h_1,h]
+        case isFalse hf =>
+          rw[ht]
+          by_cases x ∈ π.bn
+          case pos Hpos =>
+            simp only [Hpos,↓reduceIte] at hind ⊢
+            simp only [Finset.insert_union, Finset.singleton_union, Finset.union_singleton,
+              sdiff_le_iff, Finset.union_insert, ge_iff_le]
 
-            repeat sorry
+            sorry
+          sorry
+
+
+        -- · split
+        --   · expose_names
+        --     simp only[h_2,↓reduceIte] at hind
+        --     rw[h_1,h]
+        --     have h : (π.fn ∪ p.fn) \ π.bn ∪ {v} ⊆  ({x, x} ∪ π.fn ∪ p.fn) \ π.bn ∪ {v} := by
+        --       grind
+        --     grind
+        --   · expose_names
+        --     simp only[h_2,↓reduceIte] at hind
+        --     rw[h_1,h]
+
+        --     repeat sorry
         repeat sorry
       repeat sorry
 

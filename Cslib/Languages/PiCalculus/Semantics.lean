@@ -8,6 +8,9 @@ module
 
 public import Cslib.Foundations.Semantics.LTS.Basic
 public import Cslib.Languages.PiCalculus.Basic
+public import Cslib.Foundations.Semantics.LTS.HasTau
+public meta import Cslib.Foundations.Semantics.LTS.Notation
+
 
 @[expose] public section
 
@@ -34,7 +37,7 @@ open Prefix
 open Act
 
 /-- The transition relation for PiCal. -/
-@[lts PiCal.lts]
+@[lts lts]
 inductive Tr [DecidableEq Name] [HasFresh Name] : Process Name →
  Act Name → Process Name → Prop
 where
@@ -59,7 +62,7 @@ where
 /-- Helper for proofs when a transition is not possible because the channels are different.
   If a ≠ b, there is not transition from a process prefixed by a with (coname b y) as label.
 -/
-theorem Tr.no_tr_from_diff_chn [HasFresh Name] [DecidableEq Name] (a b x y : Name):
+theorem Tr.no_tr_from_diff_chn [HasFresh Name] [DecidableEq Name] (a b x y : Name) :
   a ≠ b →
   ¬ ∃ s',
   Tr ((a⟨x⟩∘p)ₘ) (coname b y) s'
@@ -89,7 +92,7 @@ form `Tr x(y)∘p (name x z) p', there remains a proof that p[y:=z] is equal to 
 If p' = p[y:=z], there is a transition from x(y)ᵒp to p' with label (name x z)
 -/
 theorem Tr.inp_subst [DecidableEq Name] [HasFresh Name] {p p' : Process Name}
-  (hsubst : p' = p[y:=z])
+  (hsubst : p' = p[y := z])
   : Tr (motive (pre (recv x y) p)) (name x z) p'
 :=
 by

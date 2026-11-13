@@ -24,6 +24,7 @@ section BehaviouralTheory
 variable {Name : Type u} [DecidableEq Name]
   {defs : Constant → PiCal.Process Name → Prop}
 
+open LTS
 
 open Process Act Act.Co Motive
 
@@ -36,7 +37,7 @@ private inductive ParNil : Process Name → Process Name → Prop where
 
 /-- P | 𝟎 ~ P -/
 @[simp, scoped grind .]
-theorem bisimilarity_par_nil [HasFresh Name] :
+theorem bisimilarity_par_nil [HasFresh Name] (p : Process Name):
   (p ‖ 𝐨ₘ) ~[lts (Name := Name)] p :=
 by
   exists ParNil
@@ -69,6 +70,8 @@ private inductive ResBisim [HasFresh Name] :
 | res : (p ~[lts (Name := Name)] q) → ResBisim (res a p) (res a q)
 | remain :  (p ~[lts (Name := Name)] q)  → ResBisim p q
 
+#check Bisimilarity
+
 @[scoped grind .]
 theorem bisimilarity_congr_res [HasFresh Name] :
     ∀a : Name, p ~[lts (Name := Name)] q →
@@ -84,30 +87,30 @@ theorem bisimilarity_congr_res [HasFresh Name] :
     · intros s₁' htr
       cases htr
       case res a p'' hnontin htr =>
-        obtain ⟨q'', htrq, hbs⟩ := Bisimilarity.is_bisimulation.follow_fst hbs' htr
+        obtain ⟨q'', htrq, hbs⟩ := Bisimilarity.follow_fst hbs' htr
         exists (ν a) q''
         apply And.intro (Tr.res htrq hnontin) (ResBisim.res hbs)
       case opn x htr=>
-        obtain ⟨q'', htrq, hbs⟩ := Bisimilarity.is_bisimulation.follow_fst hbs' htr
+        obtain ⟨q'', htrq, hbs⟩ := Bisimilarity.follow_fst hbs' htr
         exists q''
         apply And.intro ( Tr.opn htrq) (ResBisim.remain hbs)
     · intros s₂' htr
       cases htr
       case res q'' hnotin htr =>
-        obtain ⟨p'',htrp,hbs⟩ := Bisimilarity.is_bisimulation.follow_snd hbs' htr
+        obtain ⟨p'',htrp,hbs⟩ := Bisimilarity.follow_snd hbs' htr
         exists (ν a) p''
         apply And.intro (Tr.res htrp hnotin) (ResBisim.res hbs)
       case opn x htr =>
-        obtain ⟨p'',htrp,hbs⟩ := Bisimilarity.is_bisimulation.follow_snd hbs' htr
+        obtain ⟨p'',htrp,hbs⟩ := Bisimilarity.follow_snd hbs' htr
         exists p''
         apply And.intro ( Tr.opn htrp) (ResBisim.remain hbs)
   case remain hbs =>
     constructor
     · intro s₁' htr
-      obtain ⟨s₂', htr₂, hbs⟩ := Bisimilarity.is_bisimulation.follow_fst hbs htr
+      obtain ⟨s₂', htr₂, hbs⟩ := Bisimilarity.follow_fst hbs htr
       exact ⟨s₂', (And.intro htr₂ (ResBisim.remain hbs))⟩
     · intro s₂' htr
-      obtain ⟨s₁',htr₁,hbs⟩ :=  Bisimilarity.is_bisimulation.follow_snd hbs htr
+      obtain ⟨s₁',htr₁,hbs⟩ :=  Bisimilarity.follow_snd hbs htr
       exact ⟨s₁', (And.intro htr₁ (ResBisim.remain hbs))⟩
 
 
@@ -279,19 +282,38 @@ theorem bisimilarity_choice_comm [HasFresh Name]:
   use ChoiceComm, ChoiceComm.choiceComm
   intros s₁ s₂ hr μ
   constructor
-  repeat
-    intro s' htr
+  case _ =>
+    intro s₁' htr
     cases hr
     case choiceComm p q =>
-      exists s'
+      exists s₁'
       constructor
       · cases htr
         case sumL htr => exact Tr.sumR htr
         case sumR htr => exact Tr.sumL htr
       · apply ChoiceComm.bisim
-        exact Bisimilarity.refl s'
+        exact HomBisimilarity.refl s₁'
     case bisim hbs =>
-      grind[ChoiceComm]
+      have ⟨s₂',h⟩ := Bisimilarity.follow_fst hbs htr
+      exists s₂'
+      apply And.intro h.1
+      exact ChoiceComm.bisim h.2
+  case _ =>
+    intro s₂' htr
+    cases hr
+    case choiceComm p q =>
+      exists s₂'
+      constructor
+      · cases htr
+        case sumL htr => exact Tr.sumR htr
+        case sumR htr => exact Tr.sumL htr
+      · exact ChoiceComm.bisim (HomBisimilarity.refl s₂' )
+
+    case bisim hbs =>
+      have ⟨s₁',h⟩ := Bisimilarity.follow_snd hbs htr
+      exists s₁'
+      exact And.intro h.1 (ChoiceComm.bisim h.2)
+
 
 private inductive ChoiceAssoc : Process Name → Process Name → Prop where
   | assoc : ChoiceAssoc (sum p (sum q r)) ((sum (sum p q) r)ₘ)
@@ -328,8 +350,8 @@ theorem bisimilarity_choice_assoc [HasFresh Name] :
 private inductive SubstBisim [HasFresh Name] : Process Name → Process Name → Prop where
 | subst {x y : Name} : (p ~[lts (Name := Name)] q) → SubstBisim (p[x :=y]) (q[x:=y])
 
-theorem Bisim_subst [HasFresh Name] (p q : Process Name) (b z : Name):
-  (p ~[lts (Name := Name)] q) → (p[b:=z]) ~[lts (Name := Name)] (q [b:=z]) := by
+theorem Bisim_subst [HasFresh Name] (p q : Process Name) (b z : Name) :
+  (p ~[lts (Name := Name)] q) → (p[b:=z]) ~[lts (Name := Name)] (q[b:=z]) := by
   intro hbis
   use SubstBisim
   constructor
@@ -405,7 +427,10 @@ theorem bisimilarity_congr_pre [HasFresh Name] :
         cases htr
         exact ⟨p',Tr.tau,PreBisim.bisim hbis⟩
 
-  case bisim => grind [Bisimilarity.largest_bisimulation]
+  case bisim =>
+
+    sorry
+    --grind [Bisimilarity.largest_bisimulation]
 #check Tr.inp
 end BehaviouralTheory
 end Cslib.PiCal
