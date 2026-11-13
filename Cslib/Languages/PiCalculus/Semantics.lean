@@ -42,12 +42,14 @@ where
   | inp : Tr (motive (pre (recv x y) p)) (name x z) (p[y:=z])
   | tau : Tr (motive (pre τ p)) τ p
   | mat : Tr (motive (pre π p)) α p' → Tr (motive (pre (Prefix.guard x x π) p)) α p'
-  | sumL : Tr (motive p) α (motive p') →  Tr (motive (sum p q)) α (motive p')
-  | sumR : Tr (motive q) α (motive q') →  Tr (motive (sum p q)) α (motive q')
+  | sumL : Tr (motive p) α p' →  Tr (motive (sum p q)) α p'
+  | sumR : Tr (motive q) α q' →  Tr (motive (sum p q)) α q'
   | parL : Tr p α p' → α.bn ∩ q.fn = ∅ → Tr (par p q) α (par p' q)
   | parR : Tr q α q' → α.bn ∩ p.fn = ∅ → Tr (par p q) α (par p q')
   | comm : Tr p μ p' → Tr q μ' q' → (Act.Co μ μ') → Tr (par p q) τ (par p' q')
   | closeL : Tr p (conameB x z) p' → Tr q (name x z) q' → z ∉ q.fn →
+    Tr (par p q) τ (res z (par p' q'))
+  | closeR : Tr p (name x z) p' → Tr q (conameB x z) q' → z ∉ p.fn →
     Tr (par p q) τ (res z (par p' q'))
   | res : Tr p α p' → z ∉ α.n → Tr (res z p) α (res z p')
   | opn : Tr p (coname x z) p' → Tr (res z p) (conameB x z) p'
