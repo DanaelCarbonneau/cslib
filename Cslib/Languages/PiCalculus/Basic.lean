@@ -127,8 +127,7 @@ def Prefix.subst [DecidableEq Name] (μ : Prefix Name) (x v : Name) : Prefix Nam
 
 mutual
 
-/--
-  Mutual definition of both motives and process
+/-- Mutual definition of both motives and process
 
   P ::= M | P ‖ P | (ν z) P | !a(x).P
   M ::= 𝐨 | π.P | M + M

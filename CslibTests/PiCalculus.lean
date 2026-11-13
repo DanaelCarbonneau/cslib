@@ -350,6 +350,8 @@ by
             apply R.b <| And.intro hdiff.1 (And.intro hdiff.2.2.1 hdiff.2.2.2.2.1)
           case closeL x' z' p' q'  htr₁ htr₂ hn₁ =>
             cases htr₁
+          case closeR x' z' p' q' htr₁ hn₁ htr₂ =>
+            cases htr₂
         case opn x' htr =>
           cases htr
           case parL _ htr _ =>
